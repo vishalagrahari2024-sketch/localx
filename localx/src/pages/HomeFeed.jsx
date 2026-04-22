@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { auth } from '../components/firebase';
 import PostCard from '../components/PostCard';
 import CreatePostModal from '../components/CreatePostModal';
 import api from '../utils/api';
 import { connectSocket } from '../utils/socket';
-import { TrendingUp, Users as UsersIcon, Megaphone, Inbox } from 'lucide-react';
+import { TrendingUp, Users as UsersIcon, Megaphone, Inbox, Home, Compass, User as UserIcon } from 'lucide-react';
 
 export default function HomeFeed() {
   const [posts, setPosts] = useState([]);
@@ -15,6 +16,7 @@ export default function HomeFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [userRole, setUserRole] = useState('student');
+  const [dbUser, setDbUser] = useState(null);
 
   const user = auth.currentUser;
 
@@ -23,6 +25,7 @@ export default function HomeFeed() {
     const fetchUser = async () => {
       try {
         const res = await api.get('/auth/me');
+        setDbUser(res.data);
         setUserRole(res.data.role || 'student');
       } catch (err) {}
     };
@@ -170,6 +173,63 @@ export default function HomeFeed() {
   return (
     <div className="main-content">
       <div className="feed-layout">
+        {/* Left Sidebar */}
+        <aside className="left-sidebar">
+          {dbUser && (
+            <div className="widget glass-panel p-0 overflow-hidden">
+              <div 
+                className="h-24 w-full bg-gradient-to-r from-sky-400 to-indigo-500"
+                style={dbUser.coverPhoto ? { backgroundImage: `url(${dbUser.coverPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+              ></div>
+              <div className="px-4 pb-5 relative text-center">
+                <div className="w-16 h-16 mx-auto rounded-full border-4 border-[var(--bg-secondary)] bg-[var(--bg-color)] overflow-hidden shadow-sm -mt-8 mb-3 flex items-center justify-center shrink-0">
+                  {dbUser.avatar ? (
+                    <img src={dbUser.avatar} alt={dbUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--primary-color)] to-[var(--secondary-color)] text-white text-xl font-bold">
+                      {dbUser.name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-bold text-[var(--text-primary)] text-lg leading-tight mb-1">{dbUser.name}</h3>
+                <p className="text-[var(--text-secondary)] text-sm mb-4 font-medium">
+                  {dbUser.department ? `${dbUser.department} ${dbUser.year ? `• ${dbUser.year}` : ''}` : dbUser.email}
+                </p>
+                <div className="flex justify-center gap-6 text-sm border-t border-[var(--border-color)] pt-4 text-[var(--text-primary)]">
+                  <div className="text-center">
+                    <div className="font-bold text-base">{dbUser.followersCount || 0}</div>
+                    <div className="text-[var(--text-secondary)] text-xs font-medium">Followers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-base">{dbUser.followingCount || 0}</div>
+                    <div className="text-[var(--text-secondary)] text-xs font-medium">Following</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="widget glass-panel p-3">
+            <nav className="flex flex-col gap-1">
+              <Link to="/home" className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-color)] text-[var(--primary-color)] font-semibold transition-colors">
+                <Home size={20} /> Home
+              </Link>
+              <Link to="/search" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-color)] text-[var(--text-primary)] hover:text-[var(--primary-color)] transition-colors font-medium">
+                <Compass size={20} /> Explore
+              </Link>
+              <Link to="/messages" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-color)] text-[var(--text-primary)] hover:text-[var(--primary-color)] transition-colors font-medium">
+                <Inbox size={20} /> Messages
+              </Link>
+              <Link to="/groups" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-color)] text-[var(--text-primary)] hover:text-[var(--primary-color)] transition-colors font-medium">
+                <UsersIcon size={20} /> Groups
+              </Link>
+              <Link to="/profile" className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--bg-color)] text-[var(--text-primary)] hover:text-[var(--primary-color)] transition-colors font-medium border-t border-[var(--border-color)] mt-2 pt-3">
+                <UserIcon size={20} /> My Profile
+              </Link>
+            </nav>
+          </div>
+        </aside>
+
         {/* Main Feed Column */}
         <main className="feed-column">
           {/* Create Post Bar */}

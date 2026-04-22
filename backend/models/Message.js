@@ -4,7 +4,11 @@ const MessageSchema = new mongoose.Schema({
   conversationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Conversation',
-    required: true,
+    index: true,
+  },
+  groupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Group',
     index: true,
   },
   senderId: {

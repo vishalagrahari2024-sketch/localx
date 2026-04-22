@@ -16,17 +16,25 @@ router.post('/register', authMiddleware, async (req, res) => {
       return res.status(200).json({ message: 'User already registered', user });
     }
 
-    user = await User.create({
-      firebaseUid,
-      name: name || req.user.name || email.split('@')[0],
-      email,
-      collegeId: collegeId || '',
-      department: department || '',
-      year: year || '',
-      designation: designation || '',
-      role: role || 'student',
-      provider: req.user.firebase?.sign_in_provider === 'google.com' ? 'google' : 'email',
-    });
+    try {
+      user = await User.create({
+        firebaseUid,
+        name: name || req.user.name || email.split('@')[0],
+        email,
+        collegeId: collegeId || '',
+        department: department || '',
+        year: year || '',
+        designation: designation || '',
+        role: role || 'student',
+        provider: req.user.firebase?.sign_in_provider === 'google.com' ? 'google' : 'email',
+      });
+    } catch (createError) {
+      if (createError.code === 11000) {
+        user = await User.findOne({ firebaseUid });
+      } else {
+        throw createError;
+      }
+    }
 
     res.status(201).json({ message: 'User registered successfully', user });
   } catch (error) {

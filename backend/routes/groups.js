@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Group = require('../models/Group');
+const User = require('../models/User');
+const Message = require('../models/Message');
 const Post = require('../models/Post');
 const authMiddleware = require('../middleware');
 const { attachDbUser } = require('../middleware/roleCheck');
@@ -52,7 +54,8 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({ message: 'Group created', group });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating group' });
+    console.error('Group creation error:', error);
+    res.status(500).json({ message: 'Error creating group', error: error.message });
   }
 });
 
@@ -148,6 +151,76 @@ router.post('/:groupId/posts', async (req, res) => {
     res.status(201).json({ message: 'Posted to group', post });
   } catch (error) {
     res.status(500).json({ message: 'Error posting to group' });
+  }
+});
+
+// GET /api/groups/:groupId/messages — Group chat history
+router.get('/:groupId/messages', async (req, res) => {
+  try {
+    const { cursor, limit = 50 } = req.query;
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const isMember = group.members.some(m => m.userId.equals(req.dbUser._id));
+    if (!isMember) return res.status(403).json({ message: 'Must be a member to view messages' });
+
+    const query = { groupId: group._id };
+    if (cursor) query._id = { $lt: cursor };
+
+    const messages = await Message.find(query)
+      .populate('senderId', 'name avatar')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) + 1);
+
+    const hasMore = messages.length > parseInt(limit);
+    const results = hasMore ? messages.slice(0, -1) : messages;
+
+    res.json({
+      messages: results.reverse(),
+      hasMore,
+      nextCursor: hasMore ? results[0]._id : null,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching group messages' });
+  }
+});
+
+// POST /api/groups/:groupId/messages — Send group message
+router.post('/:groupId/messages', async (req, res) => {
+  try {
+    const { content, mediaUrl } = req.body;
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const isMember = group.members.some(m => m.userId.equals(req.dbUser._id));
+    if (!isMember) return res.status(403).json({ message: 'Must be a member to send messages' });
+
+    if ((!content || !content.trim()) && !mediaUrl) {
+      return res.status(400).json({ message: 'Message must have content or media' });
+    }
+
+    const message = await Message.create({
+      groupId: group._id,
+      senderId: req.dbUser._id,
+      content: content?.trim() || '',
+      mediaUrl: mediaUrl || '',
+      status: 'sent',
+    });
+
+    const populatedMessage = await message.populate('senderId', 'name avatar');
+
+    // Real-time broadcast
+    if (req.app.get('io')) {
+      req.app.get('io').to(`group_${group._id}`).emit('new-group-message', {
+        groupId: group._id,
+        message: populatedMessage,
+      });
+    }
+
+    res.status(201).json(populatedMessage);
+  } catch (error) {
+    console.error('ERROR SENDING GROUP MESSAGE:', error);
+    res.status(500).json({ message: 'Error sending group message', error: error.message });
   }
 });
 

@@ -52,6 +52,37 @@ router.post('/conversations', async (req, res) => {
   }
 });
 
+// POST /api/messages/conversations/group — Create a group conversation
+router.post('/conversations/group', async (req, res) => {
+  try {
+    const { name, participantIds } = req.body;
+    
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Group name is required' });
+    }
+    if (!participantIds || !Array.isArray(participantIds) || participantIds.length < 1) {
+      return res.status(400).json({ message: 'Participants are required for a group' });
+    }
+
+    // Ensure the creator is in the participants list
+    const participants = new Set([...participantIds, req.dbUser._id.toString()]);
+
+    const conversation = await Conversation.create({
+      participants: Array.from(participants),
+      isGroup: true,
+      name: name.trim(),
+      adminId: req.dbUser._id,
+    });
+
+    const populatedConversation = await conversation.populate('participants', 'name avatar email');
+
+    res.status(201).json(populatedConversation);
+  } catch (error) {
+    console.error('Error creating group conversation:', error);
+    res.status(500).json({ message: 'Error creating group conversation' });
+  }
+});
+
 // GET /api/messages/conversations/:id/messages — Get messages
 router.get('/conversations/:id/messages', async (req, res) => {
   try {
@@ -140,7 +171,8 @@ router.post('/conversations/:id/messages', async (req, res) => {
 
     res.status(201).json(populatedMessage);
   } catch (error) {
-    res.status(500).json({ message: 'Error sending message' });
+    console.error('Message send error:', error);
+    res.status(500).json({ message: 'Error sending message', error: error.message });
   }
 });
 

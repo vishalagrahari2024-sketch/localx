@@ -315,14 +315,14 @@ const res = await axios.post("/api/posts", formData, {
     const unreadCount = notifications.filter(notif => !notif.read).length;
 
     if (loading || !user) {
-        return <div className="text-center p-10 text-xl">Loading LocalX Profile...</div>;
+        return <div className="text-center p-10 text-xl">Loading SmartX Profile...</div>;
     }
 
     return (
     <div className="min-h-screen w-screen bg-gray-50 text-slate-800 flex flex-col">
         {/* HEADER remains the same */}
         <header className="bg-white shadow-sm flex justify-between items-center px-8 py-4 sticky top-0 z-10">
-            <div className="text-2xl font-bold text-sky-700 hidden sm:block">LocalX</div>
+            <div className="text-2xl font-bold text-sky-700 hidden sm:block">SmartX</div>
             <div className="flex-1 max-w-lg mx-4"> 
                 <div className="relative">
                     <input

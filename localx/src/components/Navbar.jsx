@@ -79,7 +79,7 @@ export default function Navbar() {
           <div className="logo-icon-bg">
             <GraduationCap className="logo-icon-svg" size={24} strokeWidth={2.5} />
           </div>
-          <span className="logo-text">LocalX</span>
+          <span className="logo-text">SmartX</span>
         </Link>
 
         {/* Search */}

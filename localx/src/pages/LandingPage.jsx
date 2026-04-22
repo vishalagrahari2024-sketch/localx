@@ -16,7 +16,7 @@ export default function LandingPage() {
             <div className="logo-icon-bg">
               <GraduationCap className="logo-icon-svg" size={24} strokeWidth={2.5} />
             </div>
-            <span className="logo-text">LocalX</span>
+            <span className="logo-text">SmartX</span>
           </div>
           <div className="landing-nav-actions">
             <Link to="/" className="btn-secondary">Log In</Link>
@@ -116,9 +116,9 @@ export default function LandingPage() {
         <div className="footer-content">
           <div className="footer-logo">
             <GraduationCap size={24} className="text-[var(--primary-color)]" />
-            <span className="logo-text">LocalX</span>
+            <span className="logo-text">SmartX</span>
           </div>
-          <p>© 2026 LocalX — Built for your campus community</p>
+          <p>© 2026 SmartX — Built for your campus community</p>
         </div>
       </footer>
     </div>

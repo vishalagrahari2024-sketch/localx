@@ -198,6 +198,19 @@ input, textarea, select {
   width: 100%;
 }
 
+.left-sidebar {
+  display: none;
+  position: sticky;
+  top: 6.5rem;
+  height: max-content;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .left-sidebar { display: flex; }
+}
+
 .sidebar {
   display: none;
   position: sticky;

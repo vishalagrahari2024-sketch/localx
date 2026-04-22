@@ -14,12 +14,24 @@ const attachDbUser = async (req, res, next) => {
 
     if (!dbUser) {
       // Auto-create user doc on first authenticated request
-      dbUser = await User.create({
-        firebaseUid: req.user.uid,
-        name: req.user.name || req.user.email?.split('@')[0] || 'User',
-        email: req.user.email || '',
-        provider: req.user.firebase?.sign_in_provider === 'google.com' ? 'google' : 'email',
-      });
+      try {
+        dbUser = await User.create({
+          firebaseUid: req.user.uid,
+          name: req.user.name || req.user.email?.split('@')[0] || 'User',
+          email: req.user.email || '',
+          provider: req.user.firebase?.sign_in_provider === 'google.com' ? 'google' : 'email',
+        });
+      } catch (createError) {
+        // If a duplicate key error occurs, it means another concurrent request created the user
+        if (createError.code === 11000) {
+          dbUser = await User.findOne({ firebaseUid: req.user.uid });
+          if (!dbUser) {
+            throw new Error('Failed to find user after duplicate key error');
+          }
+        } else {
+          throw createError;
+        }
+      }
     }
 
     if (dbUser.isSuspended) {

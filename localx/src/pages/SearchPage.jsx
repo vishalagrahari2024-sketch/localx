@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../utils/api';
+import { auth } from '../components/firebase';
 import PostCard from '../components/PostCard';
 
 export default function SearchPage() {
@@ -11,6 +12,7 @@ export default function SearchPage() {
   const [posts, setPosts] = useState([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
+  const user = auth.currentUser;
 
   const doSearch = async (q) => {
     if (!q?.trim()) return;
@@ -34,10 +36,53 @@ export default function SearchPage() {
     if (q) { setQuery(q); doSearch(q); }
   }, []);
 
+  const handleLike = async (postId) => {
+    try {
+      const res = await api.post(`/posts/${postId}/like`);
+      setPosts(prev => prev.map(p => p._id === postId ? res.data.post : p));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleComment = async (postId, text) => {
+    try {
+      const res = await api.post(`/posts/${postId}/comment`, { text });
+      setPosts(prev => prev.map(p => p._id === postId ? res.data.post : p));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleBookmark = async (postId) => {
+    try {
+      await api.post(`/posts/${postId}/bookmark`);
+      setPosts(prev => prev.map(p => {
+        if (p._id !== postId) return p;
+        const isBookmarked = p.bookmarks?.includes(user?.uid);
+        return {
+          ...p,
+          bookmarks: isBookmarked
+            ? p.bookmarks.filter(id => id !== user?.uid)
+            : [...(p.bookmarks || []), user?.uid],
+        };
+      }));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleShare = async (postId) => {
+    try {
+      await api.post(`/posts/${postId}/share`);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDelete = async (postId) => {
+    try {
+      await api.delete(`/posts/${postId}`);
+      setPosts(prev => prev.filter(p => p._id !== postId));
+    } catch (err) { console.error(err); }
+  };
+
   return (
     <div className="search-page">
       <div className="search-hero">
-        <h1>Explore LocalX</h1>
+        <h1>Explore SmartX</h1>
         <form onSubmit={(e) => { e.preventDefault(); doSearch(query); }} className="search-form-lg">
           <input type="text" placeholder="Search users, posts, groups..." value={query}
             onChange={(e) => setQuery(e.target.value)} className="search-input-lg" autoFocus />
@@ -67,7 +112,19 @@ export default function SearchPage() {
         {activeTab === 'posts' && (
           <div className="post-results">
             {posts.length === 0 ? <div className="empty-text">No posts found</div> :
-              posts.map(p => <PostCard key={p._id} post={p} />)}
+              posts.map(p => (
+                <PostCard 
+                  key={p._id} 
+                  post={p} 
+                  currentUserId={user?.uid}
+                  onLike={handleLike}
+                  onComment={handleComment}
+                  onBookmark={handleBookmark}
+                  onShare={handleShare}
+                  onDelete={handleDelete}
+                />
+              ))
+            }
           </div>
         )}
         {activeTab === 'groups' && (

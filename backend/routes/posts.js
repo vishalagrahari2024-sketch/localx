@@ -51,16 +51,23 @@ router.get('/', async (req, res) => {
       query.visibility = visibility;
     } else {
       // Default: show public posts + user's department posts
-      query.$or = query.$or || [];
-      query.$or.push({ visibility: 'public' });
+      const visibilityConditions = [{ visibility: 'public' }];
       if (req.dbUser.department) {
-        query.$or.push({
+        visibilityConditions.push({
           visibility: 'department',
           tags: req.dbUser.department.toLowerCase(),
         });
       }
-      // If no $or conditions other than what we added, restructure
-      if (query.$or.length === 0) delete query.$or;
+      
+      if (query.$or) {
+        query.$and = [
+          { $or: query.$or },
+          { $or: visibilityConditions }
+        ];
+        delete query.$or;
+      } else {
+        query.$or = visibilityConditions;
+      }
     }
 
     const posts = await Post.find(query)

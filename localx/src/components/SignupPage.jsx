@@ -41,7 +41,7 @@ const SignupPage = () => {
     <div className="flex min-h-screen">
       <div className="hidden md:flex flex-1 bg-sky-500 items-center justify-center flex-col gap-6">
         <GraduationCap size={160} className="text-white opacity-90" />
-        <h1 className="text-white text-5xl font-bold tracking-tight">LocalX</h1>
+        <h1 className="text-white text-5xl font-bold tracking-tight">SmartX</h1>
         <p className="text-sky-100 text-lg">Your campus community.</p>
       </div>
 

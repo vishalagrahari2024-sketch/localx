@@ -15,7 +15,7 @@ const MONGO_URI = process.env.MONGO_URI;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000'],
   credentials: true,
 }));
 
@@ -64,7 +64,7 @@ app.use("/api", legacyRoutes);
 app.get("/", (req, res) => {
   res.json({
     status: "running",
-    message: "LocalX Backend API v2.0",
+    message: "SmartX Backend API v2.0",
     timestamp: new Date().toISOString(),
   });
 });
@@ -80,6 +80,6 @@ app.use((err, req, res, next) => {
 
 // --- Start Server ---
 server.listen(PORT, () => {
-  console.log(`🚀 LocalX Server running on http://localhost:${PORT}`);
+  console.log(`🚀 SmartX Server running on http://localhost:${PORT}`);
   console.log(`📡 Socket.IO ready for real-time connections`);
 });

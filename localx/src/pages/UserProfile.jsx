@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { auth } from '../components/firebase';
 import PostCard from '../components/PostCard';
 import api from '../utils/api';
@@ -14,6 +14,7 @@ export default function UserProfile() {
   const [isFollower, setIsFollower] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+  const navigate = useNavigate();
 
   const currentUser = auth.currentUser;
   const isOwnProfile = !userId || userId === 'me';
@@ -91,6 +92,16 @@ export default function UserProfile() {
     } catch (err) { console.error(err); }
   };
 
+  const handleStartMessage = async () => {
+    try {
+      if (!profile || !profile._id) return;
+      await api.post('/messages/conversations', { participantId: profile._id });
+      navigate('/messages');
+    } catch (err) {
+      console.error('Error starting conversation:', err);
+    }
+  };
+
   const handleLike = async (postId) => {
     try {
       const res = await api.post(`/posts/${postId}/like`);
@@ -159,7 +170,7 @@ export default function UserProfile() {
                     >
                       {isFollowing ? 'Following' : isFollower ? 'Follow Back' : 'Follow'}
                     </button>
-                    <button className="btn-secondary">Message</button>
+                    <button className="btn-secondary" onClick={handleStartMessage}>Message</button>
                   </>
                 )}
               </div>
